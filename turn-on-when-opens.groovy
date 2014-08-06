@@ -28,7 +28,7 @@ preferences {
         input "contact1", "capability.contactSensor", title: "Where?"
     }
     section("Turn on a light..."){
-        input "switch1", "capability.switch"
+        input "switches", "capability.switch", multiple: true
     }
 }
 
@@ -53,6 +53,6 @@ def initialize() {
 // TODO: implement event handlers
 def contactOpenHandler(evt) {
     log.debug "$evt.value: $evt, $settings"
-    log.info "Turning on switch: $switch1"
-    switch1.on()
+    log.info "Turning on switches: $switches"
+    switches.on()
 }
