@@ -36,6 +36,7 @@ preferences {
     section("Notification method") {
         input "pushNotification", "bool", title: "Push notification", required: false
         input "phone", "phone", title: "Text message at", description: "Tap to enter phone number", required: false
+        input "notificationDelay", "number", title: "Send at most 1 message every X minutes", required: false
     }
 }
 
@@ -68,7 +69,15 @@ def contactOpenHandler(evt) {
         runIn(offMinutes * 60, "scheduledTurnOff")
     }
 
-    if(pushNotification || phone) {
+    //send message if none in past X minutes
+    def recentNotification = false
+    if(notificationDelay) {
+        def timeAgo = new Date(now() - notificationDelay * 60 * 1000)
+        def recentEvents = contact1.eventsSince(timeAgo)
+        recentNotification = recentEvents.count { it.value && it.value == "open" } > 1
+    }
+
+    if((pushNotification || phone) && !recentNotification) {
         def msg = "You $contact1 is open"
         log.info "Sending notification $msg"
         if (pushNotification) {
