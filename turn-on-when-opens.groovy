@@ -30,6 +30,9 @@ preferences {
     section("Turn on a light..."){
         input "switches", "capability.switch", multiple: true
     }
+    section("Turn it off after this many minutes"){
+        input "offMinutes", "number", required: false
+    }
 }
 
 def installed() {
@@ -42,6 +45,7 @@ def updated() {
     log.debug "Updated with settings: ${settings}"
 
     unsubscribe()
+    unschedule()
     initialize()
 }
 
@@ -55,4 +59,13 @@ def contactOpenHandler(evt) {
     log.debug "$evt.value: $evt, $settings"
     log.info "Turning on switches: $switches"
     switches.on()
+
+    if(offMinutes) {
+        runIn(offMinutes * 60, "scheduledTurnOff")
+    }
+}
+
+def scheduledTurnOff() {
+    log.info "Turning off switches after $offMinutes: $switches"
+    switches.off()
 }
