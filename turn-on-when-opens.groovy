@@ -24,7 +24,7 @@ definition(
 
 
 preferences {
-    page(name: "mainPage", title: "Turn On Light When It Opens", nextPage: "notificationPage", uninstall:true) {
+    page(name: "mainPage", title: "Turn On Light When It Opens", nextPage: "selectPhrase", uninstall:true) {
         section("When the door opens..."){
             input "contact1", "capability.contactSensor", title: "Where?"
         }
@@ -44,6 +44,16 @@ preferences {
             input "pushNotification", "bool", title: "Push notification", required: false
             input "phone", "phone", title: "Text message at", description: "Tap to enter phone number", required: false
             input "notificationDelay", "number", title: "Send at most 1 message every X minutes", required: false
+        }
+    }
+    page(name: "selectPhrase")
+}
+
+def selectPhrase() {
+    dynamicPage(name: "selectPhrase", title: "Invoke a Hello Home Action", nextPage: "notificationPage") {
+        def phrases = location.helloHome?.getPhrases()*.label
+        section("Hello Home Actions") {
+            input "phraseToExecute", "enum", title: "Phrase", required: false, options: phrases
         }
     }
 }
@@ -73,6 +83,11 @@ def contactOpenHandler(evt) {
     log.info "Turning on switches: $switches"
     if(timeOk) {
         switches.on()
+
+        if(phraseToExecute) {
+            log.info "Executing $phraseToExecute"
+            location.helloHome.execute(phraseToExecute)
+        }
 
         if(offMinutes) {
             runIn(offMinutes * 60, "scheduledTurnOff")
