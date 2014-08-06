@@ -24,19 +24,23 @@ definition(
 
 
 preferences {
-    section("When the door opens..."){
-        input "contact1", "capability.contactSensor", title: "Where?"
+    page(name: "mainPage", title: "Turn On Light When It Opens", nextPage: "notificationPage", uninstall:true) {
+        section("When the door opens..."){
+            input "contact1", "capability.contactSensor", title: "Where?"
+        }
+        section("Turn on a light..."){
+            input "switches", "capability.switch", multiple: true
+        }
+        section("Turn it off after this many minutes"){
+            input "offMinutes", "number", required: false
+        }
     }
-    section("Turn on a light..."){
-        input "switches", "capability.switch", multiple: true
-    }
-    section("Turn it off after this many minutes"){
-        input "offMinutes", "number", required: false
-    }
-    section("Notification method") {
-        input "pushNotification", "bool", title: "Push notification", required: false
-        input "phone", "phone", title: "Text message at", description: "Tap to enter phone number", required: false
-        input "notificationDelay", "number", title: "Send at most 1 message every X minutes", required: false
+    page(name: "notificationPage", title: "Notifications", install: true) {
+        section("Notification method") {
+            input "pushNotification", "bool", title: "Push notification", required: false
+            input "phone", "phone", title: "Text message at", description: "Tap to enter phone number", required: false
+            input "notificationDelay", "number", title: "Send at most 1 message every X minutes", required: false
+        }
     }
 }
 
