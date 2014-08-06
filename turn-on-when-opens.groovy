@@ -24,8 +24,11 @@ definition(
 
 
 preferences {
-    section("Title") {
-        // TODO: put inputs here
+    section("When the door opens..."){
+        input "contact1", "capability.contactSensor", title: "Where?"
+    }
+    section("Turn on a light..."){
+        input "switch1", "capability.switch"
     }
 }
 
@@ -44,6 +47,12 @@ def updated() {
 
 def initialize() {
     // TODO: subscribe to attributes, devices, locations, etc.
+    subscribe(contact1, "contact.open", contactOpenHandler)
 }
 
 // TODO: implement event handlers
+def contactOpenHandler(evt) {
+    log.debug "$evt.value: $evt, $settings"
+    log.info "Turning on switch: $switch1"
+    switch1.on()
+}
