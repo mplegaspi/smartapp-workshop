@@ -34,6 +34,10 @@ preferences {
         section("Turn it off after this many minutes"){
             input "offMinutes", "number", required: false
         }
+        section("Only during a certain time"){
+            input "starting", "time", title: "Starting", required: false
+            input "ending", "time", title: "Ending", required: false
+        }
     }
     page(name: "notificationPage", title: "Notifications", install: true) {
         section("Notification method") {
@@ -67,31 +71,35 @@ def initialize() {
 def contactOpenHandler(evt) {
     log.debug "$evt.value: $evt, $settings"
     log.info "Turning on switches: $switches"
-    switches.on()
+    if(timeOk) {
+        switches.on()
 
-    if(offMinutes) {
-        runIn(offMinutes * 60, "scheduledTurnOff")
-    }
-
-    //send message if none in past X minutes
-    def recentNotification = false
-    if(notificationDelay) {
-        def timeAgo = new Date(now() - notificationDelay * 60 * 1000)
-        def recentEvents = contact1.eventsSince(timeAgo)
-        recentNotification = recentEvents.count { it.value && it.value == "open" } > 1
-    }
-
-    if((pushNotification || phone) && !recentNotification) {
-        def msg = "You $contact1 is open"
-        log.info "Sending notification $msg"
-        if (pushNotification) {
-            sendPush(msg)
+        if(offMinutes) {
+            runIn(offMinutes * 60, "scheduledTurnOff")
         }
-        if (phone) {
-            sendSms(phone, msg)
+
+        //send message if none in past X minutes
+        def recentNotification = false
+        if(notificationDelay) {
+            def timeAgo = new Date(now() - notificationDelay * 60 * 1000)
+            def recentEvents = contact1.eventsSince(timeAgo)
+            recentNotification = recentEvents.count { it.value && it.value == "open" } > 1
+        }
+
+        if((pushNotification || phone) && !recentNotification) {
+            def msg = "You $contact1 is open"
+            log.info "Sending notification $msg"
+            if (pushNotification) {
+                sendPush(msg)
+            }
+            if (phone) {
+                sendSms(phone, msg)
+            }
+        } else {
+            log.info "Not sending notification"
         }
     } else {
-        log.info "Not sending notification"
+        log.info "Not during the correct time"
     }
 }
 
@@ -102,4 +110,16 @@ def scheduledTurnOff() {
     } else {
         log.info "Not turning off because the door is still open"
     }
+}
+
+private getTimeOk() {
+    def result = true
+    if (starting && ending) {
+        def currTime = now()
+        def start = timeToday(starting).time
+        def stop = timeToday(ending).time
+        result = start < stop ? currTime >= start && currTime <= stop : currTime <= stop || currTime >= start
+    }
+    log.debug "timeOk = $result"
+    result
 }
