@@ -51,21 +51,29 @@ def updated() {
 
 def initialize() {
     // TODO: subscribe to attributes, devices, locations, etc.
-    subscribe(contact1, "contact.open", contactOpenHandler)
+    subscribe(contact1, "contact", contactHandler)
 }
 
 // TODO: implement event handlers
-def contactOpenHandler(evt) {
+def contactHandler(evt) {
     log.debug "$evt.value: $evt, $settings"
-    log.info "Turning on switches: $switches"
-    switches.on()
+    state.contactState = evt.value
 
-    if(offMinutes) {
-        runIn(offMinutes * 60, "scheduledTurnOff")
+    if(evt.value == "open") {
+        log.info "Turning on switches: $switches"
+        switches.on()
+
+        if(offMinutes) {
+            runIn(offMinutes * 60, "scheduledTurnOff")
+        }
     }
 }
 
 def scheduledTurnOff() {
-    log.info "Turning off switches after $offMinutes: $switches"
-    switches.off()
+    if(state.contactState == 'closed') {
+        log.info "Turning off switches after $offMinutes: $switches"
+        switches.off()
+    } else {
+        log.info "Not turning off because the door is still open"
+    }
 }
