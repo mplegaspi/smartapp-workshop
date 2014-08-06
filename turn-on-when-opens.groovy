@@ -33,6 +33,10 @@ preferences {
     section("Turn it off after this many minutes"){
         input "offMinutes", "number", required: false
     }
+    section("Notification method") {
+        input "pushNotification", "bool", title: "Push notification", required: false
+        input "phone", "phone", title: "Text message at", description: "Tap to enter phone number", required: false
+    }
 }
 
 def installed() {
@@ -62,6 +66,19 @@ def contactOpenHandler(evt) {
 
     if(offMinutes) {
         runIn(offMinutes * 60, "scheduledTurnOff")
+    }
+
+    if(pushNotification || phone) {
+        def msg = "You $contact1 is open"
+        log.info "Sending notification $msg"
+        if (pushNotification) {
+            sendPush(msg)
+        }
+        if (phone) {
+            sendSms(phone, msg)
+        }
+    } else {
+        log.info "Not sending notification"
     }
 }
 
